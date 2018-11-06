@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+
+ 	<cxf:rsServer id="WSservicio" address="${HOST_TRANSV_SERVICIO}" 
+		serviceClass="com.koghi.nodo.transversales.ws.srvIntTransvServicio.WSServicio"
+		loggingFeatureEnabled="true" />
+		
+	<bean id="PrcServicioConsultar" class="com.koghi.nodo.transversales.procesadores.srvIntTransvServicio.PrcConsultar" />
+
+	<camelContext id="ctxServicio"
+		xmlns="http://camel.apache.org/schema/blueprint">
+
+		<route id="opConsultar">
+			<from uri="cxfrs://bean://WSservicio" />
+			<log message="Servicio Web SrvIntTransvServicio" />
+			<choice>
+				<when>
+					<simple>${in.header.operationName} == "consultar"</simple>
+					<doTry>
+						<process ref="PrcServicioConsultar" />
+						<doCatch>
+	 						<exception>java.sql.SQLIntegrityConstraintViolationException</exception>
+							<setBody>
+								<simple>[0] : Error en conexión con la base de datos . . .</simple>
+							</setBody>
+						</doCatch>
+					</doTry>
+				</when>
+			</choice>			
+			<log message="${body}" />
+			<to uri="mock:result" />
+		</route>
+
+	</camelContext>
+
+</blueprint>

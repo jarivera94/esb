@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+
+	<!-- Archivo de configuración -->
+	<cm:property-placeholder persistent-id="configSrvIntTransvOperacion.properties"
+		update-strategy="reload" />
+
+	<!-- Configuración del ActiveMQ -->
+<!-- 	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"> -->
+<!-- 		<property name="brokerURL" value="${HOST_ACTIVEMQ}" /> -->
+<!-- 		<property name="userName" value="${USER_ACTIVEMQ}" /> -->
+<!-- 		<property name="password" value="${PASSWORD_ACTIVEMQ}" /> -->
+<!-- 	</bean> -->
+
+	<bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory"> 
+		<property name="brokerURL" value="${HOST_ACTIVEMQ}" />
+		<property name="userName" value="${USER_ACTIVEMQ}" />
+		<property name="password" value="${PASSWORD_ACTIVEMQ}" />
+	</bean> 
+	<bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop"> 
+		<property name="maxConnections" value="8"/> 
+		<property name="connectionFactory" ref="jmsConnectionFactory"/> 
+	</bean>
+	<bean id="jmsConfig" class="org.apache.camel.component.jms.JmsConfiguration"> 
+		<property name="connectionFactory" ref="pooledConnectionFactory"/> 
+		<property name="concurrentConsumers" value="10"/>
+	</bean> 
+	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"> 
+		<property name="configuration" ref="jmsConfig"/> 
+		<!-- If transacted=true then enable CACHE_CONSUMER (if not using XA) to run faster. See more details at: http://camel.apache.org/jms --> <!--  <property name="transacted" value="true"/> <property name="cacheLevelName" value="CACHE_CONSUMER"/> --> 
+	</bean> 
+
+	<!-- Configuración DB en MySQL -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
+		<property name="url" value="${HOST_MYSQL}?useUnicode=true&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC" />
+		<property name="username" value="${USER_MYSQL}" />
+		<property name="password" value="${PASSWORD_MYSQL}" />
+	</bean>
+
+	<!-- Componente para DB -->
+	<bean id="sqlComponent" class="org.apache.camel.component.sql.SqlComponent">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+</blueprint>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+
+
+	<cm:property-placeholder persistent-id="configSrvIntConsultaDatosBasicos.properties"
+		update-strategy="reload" />
+
+<!-- 	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"> -->
+<!-- 		<property name="brokerURL" value="${HOST_ACTIVE_MQ}" /> -->
+<!-- 		<property name="userName" value="admin" /> -->
+<!-- 		<property name="password" value="admin" /> -->
+<!-- 	</bean> -->
+	<bean id="jmsConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory"> 
+		<property name="brokerURL" value="${HOST_ACTIVE_MQ}" />
+		<property name="userName" value="admin" />
+		<property name="password" value="admin" />
+	</bean> 
+	<bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start" destroy-method="stop"> 
+		<property name="maxConnections" value="8"/> 
+		<property name="connectionFactory" ref="jmsConnectionFactory"/> 
+	</bean>
+	<bean id="jmsConfig" class="org.apache.camel.component.jms.JmsConfiguration"> 
+		<property name="connectionFactory" ref="pooledConnectionFactory"/> 
+		<property name="concurrentConsumers" value="10"/>
+	</bean> 
+	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent"> 
+		<property name="configuration" ref="jmsConfig"/> 
+		<!-- If transacted=true then enable CACHE_CONSUMER (if not using XA) to run faster. See more details at: http://camel.apache.org/jms --> <!--  <property name="transacted" value="true"/> <property name="cacheLevelName" value="CACHE_CONSUMER"/> --> 
+	</bean>
+
+	<cxf:rsClient id="servicioTransversalCrearTransacion"
+		address="${HOST_TRANSACCION_CREAR}"
+		serviceClass="com.koghi.nodo.snr.ws.srvIntConsultaDatosBasicos.WSConsultaDatosBasicos"
+		loggingFeatureEnabled="false" />
+
+	<cxf:rsClient id="servicioTransversalActualizarTransacion"
+		address="${HOST_TRANSACCION_ACTUALIZAR}"
+		serviceClass="com.koghi.nodo.snr.ws.srvIntConsultaDatosBasicos.WSConsultaDatosBasicos"
+		loggingFeatureEnabled="false" />
+		
+	<cxf:rsClient id="servicioTransversalConsultarParametro"
+		address="${HOST_PARAMETRO_CONSULTAR}"
+		serviceClass="com.koghi.nodo.snr.ws.srvIntConsultaDatosBasicos.WSConsultaDatosBasicos"
+		loggingFeatureEnabled="false" />
+		
+	<cxf:rsClient id="servicioTransversalConsultarServicio"
+		address="${HOST_SERVICIO_CONSULTAR}"
+		serviceClass="com.koghi.nodo.snr.ws.srvIntConsultaDatosBasicos.WSConsultaDatosBasicos"
+		loggingFeatureEnabled="false" />
+		
+	<!-- BEANS PARA INTEGRACIÓN CON SERVICIO DE SESIÓN         -->
+	<!-- ***************************************************** -->
+	
+	<cxf:rsClient id="servicioTransversalConsultarOperacion"
+		address="${HOST_OPERACION_CONSULTAR}"
+		serviceClass="com.koghi.nodo.snr.ws.srvIntConsultaDatosBasicos.WSConsultaDatosBasicos"
+		loggingFeatureEnabled="false" />
+	<cxf:rsClient id="servicioSesionAutenticar"
+		address="${HOST_SESION_AUTENTICAR}"
+		serviceClass="com.koghi.nodo.snr.ws.srvIntConsultaDatosBasicos.WSConsultaDatosBasicos"
+		loggingFeatureEnabled="false" />
+	<cxf:rsClient id="servicioSesionAutorizar"
+		address="${HOST_SESION_AUTORIZAR}"
+		serviceClass="com.koghi.nodo.snr.ws.srvIntConsultaDatosBasicos.WSConsultaDatosBasicos"
+		loggingFeatureEnabled="false" />
+			
+	<!-- ***************************************************** -->
+	<!-- FIN DE BEANS PARA INTEGGRACIÓN CON SERVICIO DE SESIÓN -->
+
+	<bean id="processorServicioTransversal"
+		class="com.koghi.urt.nodo.libTransaccion.processors.ProcessorTransversal" />
+
+	<bean id="processorTransversalDatos"
+		class="com.koghi.urt.nodo.libTransaccion.processors.ProcessorTransversalDatos" />
+
+	<bean id="processorError" class="com.koghi.urt.nodo.libTransaccion.processors.ProcesorError"/>	
+	
+	<camelContext id="bean-igac-informacion-catastral-transversales"
+		xmlns="http://camel.apache.org/schema/blueprint">
+
+	</camelContext>
+
+</blueprint>

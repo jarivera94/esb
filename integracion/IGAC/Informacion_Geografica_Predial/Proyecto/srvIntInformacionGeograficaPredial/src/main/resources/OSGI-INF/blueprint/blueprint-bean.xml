@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+       xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+       xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+         
+	<!-- BEANS PARA EL MANEJO DE EXCEPCIONES -->
+	<bean id="prcSetValReintentos"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcSetValReintentos" />
+	<bean id="prcRedeliveryCounter"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcRedeliveryCounter" />
+	<bean id="prcConsultaParametro"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcConsultaParametro" />
+	<bean id="prcRespuestaParametro"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcProcesarRespuestaParametro" />
+	<bean id="prcConsultaServicio"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcConsultaServicio" />
+	<bean id="prcRespuestaServicio"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcProcesarRespuestaServicio" />
+	<bean id="prcSetErrorInfoUsuario"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcSetErrorInfoUsuario" />
+	<bean id="prcImprimirBody"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcImprimirBody" />
+	<!-- ******************************************************************************** -->
+	
+	<!-- BEAN PARA CONFIGURACIÓN DE LOS HEADERS DE AUDITORIA -->
+	<!-- ******************************************************************************** -->
+	<bean id="prcConfigurarHeadersTx"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcConfigurarHeadersTx" />
+	<!-- ******************************************************************************** -->
+	
+	<!-- BEANS PARA LA INTEGRACION CON SERVICIO DE SESION (AUTENTICAR Y AUTORIZAR)        -->
+	<!-- ******************************************************************************** -->
+	
+	<bean id="prcConsultaOperacion"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcConsultaOperacion" />
+	<bean id="prcRespuestaOperacion"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcProcesarRespuestaOperacion" />
+	<bean id="prcServicioAutenticar"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcServicioAutenticar" />
+	<bean id="prcRespuestaAutenticar"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcProcesarRespuestaAutenticar" />
+	<bean id="prcRespuestaAutorizar"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcProcesarRespuestaAutorizar" />
+	<!-- PROCESSOR PARA VERIFICAR EL CAMBIO DE AUTHENTICATION -->
+	<bean id="prcVerificarAuthorization"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcVerificarCambioAuthorization" />
+	<!-- ******************************************************************************** -->
+	<!-- FIN DE BEANS PARA LA INTEGRACION CON SERVICIO DE SESION (AUTENTICAR Y AUTORIZAR) -->
+	
+	<!-- ****************BEAN PARA EL SETEO DEL ID DEL EXCHANGE EN UN HEADER -->
+	<bean id="prcSeteoIdExchange"
+		class="com.koghi.nodo.igac.procesadores.srvIntInformacionGeograficaPredial.PrcSeteoIdExchange" />
+	<!-- ****************************************************************** -->
+	
+		<cxf:rsServer
+		id="igacServerInformacionGeograficaPredial"
+		address="${HOST_SERVICIO}"
+		serviceClass="com.koghi.nodo.igac.ws.srvIntInformacionGeograficaPredial.WSInformacionGeograficaPredial"
+		loggingFeatureEnabled="true"
+	/>
+	
+	<cxf:rsClient
+		id="igacClientInformacionGeograficaPredial"
+		address="${HOST_INFORMACION_GEOGRAFICA_PREDIAL}"
+		serviceClass="com.koghi.nodo.igac.ws.srvIntInformacionGeograficaPredial.WSInformacionGeograficaPredial"
+		loggingFeatureEnabled="true"
+	/>
+	
+	<camelContext id="igac-informacion-geografica-predial-camel-context" xmlns="http://camel.apache.org/schema/blueprint">
+	
+		<onException onRedeliveryRef="prcRedeliveryCounter" >
+			<exception>java.lang.Exception</exception>
+			<redeliveryPolicy maximumRedeliveries="{{MAX_RETRIES}}"
+				redeliveryDelay="{{RETRY_DELAY}}" />
+			<handled><constant>true</constant></handled>
+			<to uri="direct:exceptionAfterRedelivery" />
+		</onException>
+		
+		<route id = "route-servicios-igac-informacion_greogafica_predial">
+			<from uri = "cxfrs://bean://igacServerInformacionGeograficaPredial" />
+			<process ref="prcSeteoIdExchange" />
+			<process ref="prcConfigurarHeadersTx" />
+			<setHeader headerName="IdServicio">
+				<simple>{{ID_SERVICIO}}</simple>
+			</setHeader>
+			<setHeader headerName="IdOperacion">
+				<simple>{{ID_OPERACION}}</simple>
+			</setHeader>
+			<setHeader headerName="EntidadReceptora">
+				<simple>{{ENTIDAD_RECEPTORA}}</simple>
+			</setHeader>
+			<setHeader headerName="ValReintentos">
+				<simple>0</simple>
+ 			</setHeader>
+			<setHeader headerName="TelefonoMesaDeAyuda">
+				<simple>{{TELEFONO_MESA_DE_AYUDA}}</simple>
+			</setHeader>
+			<setHeader headerName="NombreContactoMesaDeAyuda">
+				<simple>{{NOMBRE_CONTACTO_MESA_DE_AYUDA}}</simple>
+			</setHeader>
+			<setHeader headerName="VersionServicio">
+				<simple>{{VERSION_SERVICIO}}</simple>
+			</setHeader>
+			
+			
+			<!-- VERIFICAR SI SE REQUIERE AUTENTICACION -->
+			<process ref="prcConsultaOperacion" />
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<log message="**********JUSTO ANTES DE CONSULTAR EL SERVICIO TRASNVERSAL OPERACION, CON EL BODY ${body}" />
+			<to uri="cxfrs://bean://servicioTransversalConsultarOperacion" />
+			<process ref="prcRespuestaOperacion" />
+			
+			<choice>
+				<when>
+					<simple>${in.header.existeAutenticacion} == 0</simple>
+					<!-- ************************************* -->
+					<!-- BLOQUE QUE CAMBIA EL HEADER Authorization POR EL VALOR DEL ARCHIVO DE PROPIEDADES, SI EL VALOR NO ES NULL -->
+					<setHeader headerName="authorizationOperacionConsultar">
+						<simple>{{AUTHORIZATION_OPERACION_CONSULTAR}}</simple>
+					</setHeader>
+					<process ref="prcVerificarAuthorization" />
+					<!-- ************************************ -->
+					<to uri="direct:principal" />
+				</when>
+				<when>
+					<simple>${in.header.existeAutenticacion} == 1</simple>
+					<log message="*************LA OPERACION REQUIERE AUTENTICACION" />
+					<!-- REALIZAR PROCESO DE AUTENTICAR Y AUTORIZAR -->
+					<process ref="prcServicioAutenticar" />
+					<to uri="cxfrs://bean://servicioSesionAutenticar" />
+					<process ref="prcRespuestaAutenticar" />
+					<choice>
+						<when>
+							<simple>${in.header.estaAutenticado} == true</simple>
+							<log message="****************SE ESTA AUTENTICADO, PASAR A PROCESO DE AUTORIZACION" />
+							<to uri="cxfrs://bean://servicioSesionAutorizar" />
+							<process ref="prcRespuestaAutorizar" />
+							<choice>
+								<when>
+									<simple>${in.header.estaAutorizado} == true</simple>
+									<log message="**********SE ESTA AUTORIZADO" />
+									<!-- ************************************* -->
+									<!-- BLOQUE QUE CAMBIA EL HEADER Authorization POR EL VALOR DEL ARCHIVO DE PROPIEDADES, SI EL VALOR NO ES NULL -->
+									<setHeader headerName="authorizationOperacionConsultar">
+										<simple>{{AUTHORIZATION_OPERACION_CONSULTAR}}</simple>
+									</setHeader>
+									<process ref="prcVerificarAuthorization" />
+									<!-- ************************************ -->
+									<to uri="direct:principal" />
+								</when>
+								<when>
+									<simple>${in.header.estaAutorizado} == false</simple>
+									<log message="***********NO SE ESTA AUTORIZADO, FIN" />
+									<to uri="mock:result" />
+								</when>
+							</choice>
+						</when>
+						<when>
+							<simple>${in.header.estaAutenticado} == false</simple>
+							<log message="***************NO SE ESTA AUTENTICADO, FIN" />
+							<to uri="mock:result" />
+						</when>
+					</choice>
+					
+				</when>
+			</choice>
+			
+			
+			<!-- *************************************** -->
+		</route>
+		
+		<route id="ruta_igac_servicio_informacion_geografica_predial">
+			<from uri="direct:principal" />
+			
+			<choice>
+				<when>
+					<simple>${in.header.operationName} == "consultarInformacionGeograficaPredial"</simple>
+					
+					<!-- *************************************** -->
+			
+					<!-- Crea una transacción -->
+					<setHeader headerName="operacionTransversal">
+						<simple>crearTransaccion</simple>
+					</setHeader>
+					<wireTap uri="direct:servicioTransversalCrear" />
+					<delay>
+						<constant>2000</constant>
+					</delay>
+					
+					<to uri="cxfrs://bean://igacClientInformacionGeograficaPredial?throwExceptionOnFailure=true" />
+					
+					<!-- Actualiza la transacción -->
+					<setHeader headerName="operacionTransversal">
+						<simple>actualizarTransaccion</simple>
+					</setHeader>
+					<setHeader headerName="CodEstado">
+						<simple>1</simple>
+					</setHeader>
+					<wireTap uri="direct:servicioTransversalActualizar" />
+					<delay>
+						<constant>1000</constant>
+					</delay>
+					<!-- *************************************** -->
+					
+					<setHeader headerName="operacionTransversal">
+						<simple>limpiarCacheTransaccion</simple>
+					</setHeader>
+					<process ref="processorServicioTransversal" />
+				</when>
+			</choice>
+			
+		</route>
+		
+		<route>
+			<from uri="direct:servicioTransversalCrear" />
+			<process ref="processorTransversalDatos" />
+			<log message="Creando Transacción" />
+			<process ref="processorServicioTransversal" />
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<to uri="cxfrs://bean://servicioTransversalCrearTransacion" />
+			<log message="Se creó la transacción" />
+		</route>
+
+		<route>
+			<from uri="direct:servicioTransversalActualizar" />
+			<process ref="processorTransversalDatos" />
+			<log message="Actualizando Transacción" />
+			<process ref="processorServicioTransversal" />
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<log message="Actualizando Transacción" />
+			<to uri="cxfrs://bean://servicioTransversalActualizarTransacion" />
+			<log message="Se actualizó la transacción" />
+		</route>
+		
+		<route>
+			<from uri="direct:crearError" />
+			<process ref="processorTransversalDatos" />
+			<log message="Creando error" />
+			<process ref="processorServicioTransversal" />
+			<to uri="activemq:queue:QErrorCrear" />
+			<log message="Se creó el error" />
+			<setHeader headerName="operacionTransversal">
+				<simple>actualizarTransaccion</simple>
+			</setHeader>
+			<process ref="prcSetValReintentos" />
+			<wireTap uri="direct:servicioTransversalActualizar" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+		</route>
+		
+		<route id="exceptionRoute">
+			<from uri="direct:endPointException" />
+			<onException>
+                <exception>java.lang.Exception</exception>
+                <continued><constant>true</constant></continued>
+                <log message = "Error en la ruta de manejo de reintentos. ${body}"/>
+			</onException>
+			<log message="se Generó un error" />
+			<process ref="processorError" />
+			<setHeader headerName="operacionTransversal">
+				<simple>crearError</simple>
+			</setHeader>
+			<wireTap uri="direct:crearError" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+		</route>
+		
+		<route id="exceptionRouteAfterRedeliveryID">
+			<from uri="direct:exceptionAfterRedelivery" />
+			<onException>
+                <exception>java.lang.Exception</exception>
+                <continued><constant>true</constant></continued>
+                <log message = "Error en la ruta de manejo final. ${body}"/>
+			</onException>
+			<!-- RUTA QUE ACTUALIZARA TRANSACCION, Y ENVIARA CORREOS A LA COLA DE CORREOS -->
+			
+			<!-- *************************************** -->
+			
+			<log message="*************ENTRA A RUTA exceptionRouteAfterRedelivery" />
+
+			<!-- Actualiza la transacción -->
+			<setHeader headerName="operacionTransversal">
+				<simple>actualizarTransaccion</simple>
+			</setHeader>
+<!-- 			<setHeader headerName="CodEstado"> -->
+<!-- 				<simple>-1</simple> -->
+<!-- 			</setHeader> -->
+<!-- 			<setHeader headerName="ValReintentos"> -->
+<!-- 				<simple>{{MAX_RETRIES}}</simple> -->
+<!-- 			</setHeader> -->
+			<wireTap uri="direct:servicioTransversalActualizar" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+			
+			<!-- *************************************** -->
+			
+			<!-- ENVIO CORREO A MESA DE SERVICIO -->
+			<!-- *************************************** -->
+			<log message="*****ENTRA AL BLOQUE DE CORREO MESA DE AYUDA. JUSTO ANTES DE PROCESAR EL prcConsultaParametro*****" />
+			<process ref="prcConsultaParametro" />
+			<log message="*****JUSTO ANTES DE CONSUMIR EL SERVICIO TRASNVERSAL servicioTransversalConsultarParametro*****" />
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<to uri="cxfrs://bean://servicioTransversalConsultarParametro" />
+			<log message="*****JUSTO DESPUES DE CONSULTAR EL SERVICIO TRASNVERSAL servicioTransversalConsultarParametro*****" />
+			<log message="*****JUSTO ANTES DEL PROCESSOR prcRespuestaParametro*****" />
+			<process ref="prcRespuestaParametro" />
+			<log message="*****JUSTO DESPUES DEL PROCESSOR prcRespuestaParametro, JUSTO ANTES DE ENVIAR A PILA DE CORREO QCorreoElectronicoEnviar*****" />
+			
+			<!-- *************************************** -->
+			
+			<!-- ENVIO CORREO A RESPONSABLE DE SERVICIO -->
+			<!-- *************************************** -->
+			<log message="*****ENTRA AL BLOQUE DE CORREO RESPONSABLE DE SERVICIO. JUSTO ANTES DE PROCESAR EL prcConsultaServicio*****" />
+			<process ref="prcConsultaServicio" />
+			<log message="*****JUSTO DESPUES DEL PROCESSOR prcConsultaServicio, JUSTO ANTES DE CONSUMIR EL SERVICIO TRANSVERSALE servicioTransversalConsultarServicio*****" />
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<to uri="cxfrs://bean://servicioTransversalConsultarServicio" />
+			<log message="*****JUSTO DESPUES DE CONSUMIR EL SERVICIO servicioTransversalConsultarServicio*****" />
+
+			<log message="*****JUSTO ANTES DEL PROCESSOR prcRespuestaServicio*****" />
+			<process ref="prcRespuestaServicio" />
+			<log message="*****JUSTO DESPUES DEL PROCESSOR prcRespuestaServicio, JUSTO ANTES DE ENVIAR A LA COLA DE CORREO QCorreoElectronicoEnviar*****" />
+			<process ref="prcImprimirBody" />
+			<to uri="activemq:QCorreoElectronicoEnviar?disableReplyTo=false" />
+			<log message="*****JUSTO DESPUES DE ENVIAR A LA COLA DE CORREO QCorreoElectronicoEnviar*****" />
+			
+			<!-- *************************************** -->
+			
+			<log message="***** ANTES DEL PROCESS FINAL *****" />
+			<process ref="prcSetErrorInfoUsuario" />
+			<log message="***** DESPUÉS DEL PROCESS FINAL *****" />
+			<setHeader headerName="operacionTransversal">
+				<simple>limpiarCacheTransaccion</simple>
+			</setHeader>
+			<process ref="processorServicioTransversal" />
+			<to uri="mock:result" />
+		</route>
+	
+	  
+	</camelContext>
+
+</blueprint>

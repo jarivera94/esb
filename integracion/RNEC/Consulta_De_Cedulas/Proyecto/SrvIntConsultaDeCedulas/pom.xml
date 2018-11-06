@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.koghi.nodo.rnec</groupId>
+  <artifactId>SrvIntConsultaCedula</artifactId>
+  <packaging>jar</packaging>
+  <version>0.0.1</version>
+
+  <name>Consulta Cedula RNEC</name>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+<!-- 	<outputDirectory.path>/home/jsierra/apache-servicemix-7.0.1/deploy/RNEC</outputDirectory.path> -->
+	<outputDirectory.path>/home/eagudelo/apache-servicemix-7.0.1/deploy/RNEC</outputDirectory.path>
+    
+    <camel-version>2.16.5</camel-version>
+    <slf4j-version>1.7.12</slf4j-version>
+    <log4j-version>1.2.17</log4j-version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+      <version>${camel-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-blueprint</artifactId>
+      <version>${camel-version}</version>
+    </dependency>
+
+    <!-- Logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j-version}</version>
+    </dependency>
+    
+    
+	<!-- Dependencias para el uso de Web Services -->
+    <dependency>
+    	<groupId>javax.ws.rs</groupId>
+        <artifactId>javax.ws.rs-api</artifactId>
+        <version>2.0.1</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.camel</groupId>
+        <artifactId>camel-cxf</artifactId>
+        <version>2.16.5</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.camel</groupId>
+        <artifactId>camel-cxf-transport</artifactId>
+        <version>2.16.5</version>
+    </dependency>
+    
+    
+	<!-- Dependencia para uso de JSONObject -->
+  	<dependency>
+    	<groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20170516</version>
+     </dependency>
+     
+     <!-- Dependencia para el uso de apache commons codec -->
+	<dependency>
+		<groupId>commons-codec</groupId>
+		<artifactId>commons-codec</artifactId>
+		<version>1.10</version>
+	</dependency>
+	
+	<!-- Dependencia para referenciar a la libreria de transversales -->
+	<dependency>
+		<groupId>com.koghi.urt.nodo</groupId>
+		<artifactId>libTransaccion</artifactId>
+		<version>0.0.1</version>
+	</dependency>
+	
+	<dependency>
+	    <groupId>org.apache.activemq</groupId>
+	    <artifactId>activemq-pool</artifactId>
+	    <version>5.12.1</version>
+	</dependency>
+
+  </dependencies>
+
+  <build>
+		<plugins>
+
+			<!-- compiler plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+
+			<!-- to generate the MANIFEST.MF of the bundle -->
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>3.3.0</version>
+				<extensions>false</extensions>
+				<executions>
+					<execution>
+						<id>bundle-manifest</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>manifest</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- to include MANIFEST.MF in the bundle -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<archive>
+						<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+					</archive>
+					<outputDirectory>${outputDirectory.path}</outputDirectory>
+				</configuration>
+			</plugin>
+
+			<!-- to run the example using mvn camel:run -->
+			<plugin>
+				<groupId>org.apache.camel</groupId>
+				<artifactId>camel-maven-plugin</artifactId>
+				<version>2.16.5</version>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

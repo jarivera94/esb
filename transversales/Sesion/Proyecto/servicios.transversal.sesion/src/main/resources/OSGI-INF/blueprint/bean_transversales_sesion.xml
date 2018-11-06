@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+       xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+       xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+         
+  <!-- Archivo de configuración -->
+  <cm:property-placeholder persistent-id="configSrvIntTransv.properties"
+		update-strategy="reload" />       
+
+<!-- 	address = "http://172.16.55.200:8080/transversales/sesion" -->
+  <cxf:rsServer
+  	id = "servidorTransversalesSesion"
+  	address = "${HOST_SESION}"
+  	serviceClass = "com.koghi.urt.servicios.transversal.sesion.ws.Servicios"
+  	loggingFeatureEnabled = "true"
+  />
+	
+<!-- 	address = "http://172.16.55.200:8080/transversales/operacion/consultar"   -->
+  <cxf:rsClient 
+  	id = "servicioUrtOperacionConsultarOperacion"
+  	address = "${HOST_OPERACION}/consultar"
+  	serviceClass = "com.koghi.urt.servicios.transversal.sesion.ws.Servicios"
+  	loggingFeatureEnabled = "true"
+  />
+  
+  
+<!--   address = "http://172.16.55.200:8080/transversales/entidad/consultar" -->
+  <cxf:rsClient 
+  	id = "servicioUrtOperacionConsultarEntidad"
+  	address = "${HOST_ENTIDAD}/consultar"
+  	serviceClass = "com.koghi.urt.servicios.transversal.sesion.ws.Servicios"
+  	loggingFeatureEnabled = "true"
+  />
+  
+  <bean id="obtenerDatosAutenticacion" class="com.koghi.urt.servicios.transversal.sesion.processors.ObtenerDatosAutenticacion" />
+  
+  <bean id="consultarUsuarioEnLdap" class="com.koghi.urt.servicios.transversal.sesion.processors.ConsultarUsuarioEnLDAP" />
+  
+  <bean id="obtenerDatosAutorizacion" class="com.koghi.urt.servicios.transversal.sesion.processors.ObtenerDatosAutorizacion" />
+  
+  <bean id="procesarRespuestaConsultarEntidad" class="com.koghi.urt.servicios.transversal.sesion.processors.ProcesarRespuestaConsultarEntidad" />
+  
+  <bean id="procesarRespuestaConsultarOperacion" class="com.koghi.urt.servicios.transversal.sesion.processors.ProcesarRespuestaConsultarOperacion" />
+  
+
+  <camelContext id="bean_transversales_sesion" xmlns="http://camel.apache.org/schema/blueprint">
+  
+    <route id="route-servicios-transversales-sesion">
+    	<from uri = "cxfrs://bean://servidorTransversalesSesion" />
+    	<log message = "/////////////////////////////////////////VALOR CamelHttpPath al ser consumindo el server: ${in.header.CamelHttpPath}" />
+    	<log
+    		message = "Servicio: Sesion - Operación: ${in.header.operationName} - Entrada ${body}"
+    	/>
+    	<choice>
+    		<when>
+    			<simple>${in.header.operationName} == "autenticar"</simple>
+    			<to uri = "direct:servicioAutenticar" />
+    		</when>
+    		<when>
+    			<simple>${in.header.operationName} == "autorizar"</simple>
+    			<to uri = "direct:servicioAutorizar" />
+    		</when>
+    	</choice>
+    	<to uri = "mock:result" />
+    </route>
+    
+    <route id="route-servicios-transversales-autenticar">
+    	<from uri = "direct:servicioAutenticar" />
+    	<setHeader headerName="cuerpoLeido">
+    		<simple>${body[0]}</simple>
+    	</setHeader>
+    	<setHeader headerName="URL_LDAP">
+    		<simple>{{URL_LDAP}}</simple>
+    	</setHeader>
+    	<setHeader headerName="USER_LDAP">
+    		<simple>{{USER_LDAP}}</simple>
+    	</setHeader>
+    	<setHeader headerName="PASSWORD_LDAP">
+    		<simple>{{PASSWORD_LDAP}}</simple>
+    	</setHeader>
+    	<process ref="obtenerDatosAutenticacion" />
+    	<choice>
+    		<when>
+    			<simple>${in.header.AuthorizationExists} == true</simple>
+    			<choice>
+    				<when>
+    					<simple>${in.header.EntidadExists} == true</simple>
+    					<process ref="consultarUsuarioEnLdap" />
+    					<log message = "*********************BODY ANTES DEL MOCK RESULT: ${body}"/>
+    					<to uri = "mock:result" />
+    				</when>
+    				<when>
+    					<simple>${in.header.EntidadExists} == false</simple>
+    					<log message = "*********************BODY ANTES DEL MOCK RESULT: ${body}"/>
+    					<to uri = "mock:result" />
+    				</when>
+    			</choice>
+    		</when>
+    		<when>
+    			<simple>${in.header.AuthorizationExists} == false</simple>
+    			<log message = "*********************BODY ANTES DEL MOCK RESULT: ${body}"/>
+    			<to uri = "mock:result" />
+    		</when>
+    	</choice>
+    	
+    </route>
+    
+    <route id="route-servicios-transversales-autorizar">
+    	<from uri = "direct:servicioAutorizar" />
+    	<log message = "/////////////////////////////////////////VALOR CamelHttpPath al entrar a la ruta de autorizar: ${in.header.CamelHttpPath}" />
+    	<setHeader headerName="cuerpoLeido">
+    		<simple>${body[0]}</simple>
+    	</setHeader>
+    	<process ref="obtenerDatosAutorizacion" />
+    	<setBody>
+    		<simple>${in.header.idEntidadEmisora}</simple>
+    	</setBody>
+    	<setHeader headerName="cuerpoLeido">
+    		<constant></constant>
+    	</setHeader>
+    	<log message = "*******************ANTES DEL cxfrs CONSULTAR ENTIDAD" />
+    	<log message = "/////////////////////////////////////////VALOR CamelHttpPath antes de consumir al cliente de consultar entidad: ${in.header.CamelHttpPath}" />
+    	<to uri="cxfrs://bean://servicioUrtOperacionConsultarEntidad?throwExceptionOnFailure=false" />
+    	<log message = "******************DESPUES DEL cxfrs CONSULTAR ENTIDAD" />
+    	<setHeader headerName = "cuerpoLeido">
+    		<simple>${body}</simple>
+    	</setHeader>
+    	<process ref="procesarRespuestaConsultarEntidad" />
+    	<choice>
+    		<when>
+    			<simple>${in.header.ipValida} == true</simple>
+    			<log message = "*********************************ENTRA A CHOICE IP VALIDA TRUE"/>
+    			<log message = "*************************VALOR DE ID OPERACION ${in.header.idOperacion} , ANTES DE CONSUMIR CONSULTAR OPERACION" />
+    			<setBody>
+    				<simple>${in.header.idOperacion}</simple>
+    			</setBody>
+    			<log message = "********************BODY ANTES DE CONSULTAR OPERACION ${body}" />
+   				<to uri = "cxfrs://bean://servicioUrtOperacionConsultarOperacion?throwExceptionOnFailure=false" />
+   				<setHeader headerName = "cuerpoLeido">
+   					<simple>${body}</simple>
+   				</setHeader>
+   				<log message = "**************** DESPUES DE CONSULTAR OPERACION" />
+   				<process ref = "procesarRespuestaConsultarOperacion" />
+   				<to uri = "mock:result" />
+    		</when>
+    		<when>
+    			<simple>${in.header.ipValida} == false</simple>
+    			<log message = "*********************************ENTRA A CHOICE IP VALIDA FALSE " />
+    			<to uri = "mock:result" />
+    		</when>
+    	</choice>
+    	<to uri = "mock:result" />
+    </route>
+  </camelContext>
+
+</blueprint>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+
+
+	<cm:property-placeholder persistent-id="{NOMBRE DEL ARCHIVO DE CONFIGURACIÓN}"
+		update-strategy="reload" />
+
+	<bean id="deadLettterErrorHandler" class="org.apache.camel.builder.DeadLetterChannelBuilder">
+		<property name="deadLetterUri" value="activemq:queue:pruebaDead" />
+		<property name="redeliveryPolicy" ref="myRedeliveryPolicyConfig" />
+	</bean>
+
+	<bean id="myRedeliveryPolicyConfig" class="org.apache.camel.processor.RedeliveryPolicy">
+		<property name="maximumRedeliveries" value="5" />
+		<property name="redeliveryDelay" value="5000" />
+	</bean>
+
+	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+		<property name="brokerURL" value="tcp://190.147.154.155:61617" />
+		<property name="userName" value="admin" />
+		<property name="password" value="admin" />
+	</bean>
+
+	<cxf:rsClient id="servicioTransversalCrearTransacion"
+		address="http://190.147.154.155:2345/transversales/transaccion/crear"
+		serviceClass="com.koghi.urt.servicios.igac.informacionCatastral.ws.ServicioInformacion"
+		loggingFeatureEnabled="false" />
+
+	<cxf:rsClient id="servicioTransversalActualizarTransacion"
+		address="http://190.147.154.155:2345/transversales/transaccion/actualizar"
+		serviceClass="com.koghi.urt.servicios.igac.informacionCatastral.ws.ServicioInformacion"
+		loggingFeatureEnabled="false" />
+
+	<bean id="processorServicioTransversal"
+		class="com.koghi.urt.nodo.libTransaccion.processors.ProcessorTransversal" />
+
+	<bean id="processorTransversalDatos"
+		class="com.koghi.urt.nodo.libTransaccion.processors.ProcessorTransversalDatos" />
+
+	<bean id="processorError" class="com.koghi.urt.nodo.libTransaccion.processors.ProcesorError"/>
+	
+	
+	<camelContext id="bean-igac-informacion-catastral-transversales"
+		xmlns="http://camel.apache.org/schema/blueprint">
+
+	</camelContext>
+
+</blueprint>

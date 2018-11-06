@@ -1,0 +1,33 @@
+# # ldapadd -x -W -D "cn=ramesh,dc=tgs,dc=com" -f adam.ldif
+
+#dn: uid=cflorez,ou=users,ou=urt,dc=koghi,dc=com
+#objectClass: top
+#objectClass: person
+#objectClass: organizationalPerson
+#objectClass: inetOrgPerson
+#cn: Cristian Florez
+#sn: Florez
+#givenname: Cristian
+#uid: cflorez
+#userpassword: {sha}mah4aephapiDo*
+
+#dn: uid=sramirez,ou=users,ou=urt,dc=koghi,dc=com
+#objectClass: top
+#objectClass: person
+#objectClass: organizationalPerson
+#objectClass: inetOrgPerson
+#cn: Sebastian Ramirez
+#sn: Ramirez
+#givenname: Sebastian
+#uid: sramirez
+#userpassword: {sha}mah4aephapiDo*
+
+dn: uid=jarias,ou=users,ou=urt,dc=koghi,dc=com
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: John Arias
+sn: Arias
+givenname: Sebastian
+uid: jarias

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="integracion/ANT/Baldios/Proyecto/nodo.srvIntConsultaBaldios/src/main/java"/>
+	<classpathentry kind="src" path="integracion/ANT/SIDRA/Proyecto/nodo.srvIntConsultaSIDRA/src/main/java"/>
+	<classpathentry kind="src" path="integracion/CSJ/Consulta_Sentencias/Proyecto/SrvIntConsultaSentencias/src/main/java"/>
+	<classpathentry kind="src" path="integracion/DAICMA/Consultar_Evento/Proyecto/SrvIntWcfDAICMAEventos/src/main/java"/>
+	<classpathentry kind="src" path="integracion/DAICMA/Consultar_Operaciones/Proyecto/SrvIntWcfDAICMAOperaciones/src/main/java"/>
+	<classpathentry kind="src" path="integracion/IGAC/Certificado_Catastral/Proyecto/SrvIntCertificadoCatastral/src/main/java"/>
+	<classpathentry kind="src" path="integracion/IGAC/Consulta_Rinex/Proyecto/SrvIntRinex/src/main/java"/>
+	<classpathentry kind="src" path="integracion/IGAC/Historico_Catastral/Proyecto/SrvIntHistoricoCatastral/src/main/java"/>
+	<classpathentry kind="src" path="integracion/IGAC/Informacion_Catastral/Proyecto/SrvIntInformacionCatastral/src/main/java"/>
+	<classpathentry kind="src" path="integracion/MADR/Consulta_SIPOV/Proyecto/SrvIntConsultaSIPOV/src/main/java"/>
+	<classpathentry kind="src" path="integracion/URT/Consulta_IPT_ITG/Proyecto/SrvIntConsultaITPITG/src/main/java"/>
+	<classpathentry kind="src" path="integracion/URT/Consulta_Personas_Inscritas/Proyecto/SrvIntConsultaPersonasSolicitud/src/main/java"/>
+	<classpathentry kind="src" path="integracion/URT/Consumidor_de_Alertas/Proyecto/SrvIntConsumirAlertas/src/main/java"/>
+	<classpathentry kind="src" path="integracion/URT/Copia_Formulario_Solicitud/Proyecto/SrvIntCopiaFormularioSolicitud/src/main/java"/>
+	<classpathentry kind="src" path="integracion/URT/Personas_Inscritas/Proyecto/SrvIntConsultaPersonasInscritas/src/main/java"/>
+	<classpathentry kind="src" path="integracion/URT/Predios_Inscritos/Proyecto/SrvIntPrediosInscritos/src/main/java"/>
+	<classpathentry kind="src" path="librerias/Transversales/libTransaccion/src/main/java"/>
+	<classpathentry kind="src" path="transversales/Proyecto/SrvIntTransversales/src/main/java"/>
+	<classpathentry kind="src" path="transversales/Sesion/Proyecto/servicios.transversal.sesion/src/main/java"/>
+	<classpathentry kind="lib" path="integracion/ANT/Baldios/Proyecto/nodo.srvIntConsultaBaldios/S{outputDirectory.path}/SrvIntConsultaBaldios-0.0.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

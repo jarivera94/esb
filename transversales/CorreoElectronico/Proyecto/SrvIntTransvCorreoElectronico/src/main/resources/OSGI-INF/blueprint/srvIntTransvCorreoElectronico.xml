@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+
+	<!-- Configuración del Host para el consumo del servicio -->
+	<cxf:rsClient id="WSparametroConsulta" address="${HOST_PARAMETRO}/consultarPorCriterio"
+		serviceClass="com.koghi.nodo.transversales.ws.srvIntTransvCorreoElectronico.WSCorreoElectronico"
+		loggingFeatureEnabled="true" />
+
+	<!-- Clases de los procesadores a usar -->
+	<bean id="PrcMailEnviar"
+		class="com.koghi.nodo.transversales.procesadores.srvIntTransvCorreoElectronico.PrcEnviar" />
+	<bean id="PrcParametroConsultar"
+		class="com.koghi.nodo.transversales.procesadores.srvIntTransvCorreoElectronico.PrcConsultar" />
+
+	<camelContext id="ctxCorreoElectronico"
+		xmlns="http://camel.apache.org/schema/blueprint">
+
+<!-- 		<onException onRedeliveryRef="prcRedeliveryCounter" > -->
+		<onException>
+			<exception>java.lang.Exception</exception>
+			<redeliveryPolicy maximumRedeliveries="5"
+				redeliveryDelay="0" />
+			<handled><constant>true</constant></handled>
+			<log message="Error en el servicio de correo electrónico: ${property.CamelExceptionCaught}" />
+<!-- 			<to uri="direct:exceptionAfterRedelivery" /> -->
+		</onException>
+		<!-- Ruta que consulta el Servicio Transversal Parámetro para obtener los 
+			datos del host de autenticación -->
+		<route id="opConsultarHOST">
+			<from uri="activemq:queue:QCorreoElectronicoEnviar" />
+
+			<log message="Servicio Web SrvIntTransvCorreoElectronico" />
+			<process ref="PrcParametroConsultar" />
+
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setBody>
+				<simple>${in.header.HOST}</simple>
+			</setBody>
+
+			<inOut uri="cxfrs:bean:WSparametroConsulta" />
+
+			<convertBodyTo type="String" />
+			<setHeader headerName="infoHOST">
+				<simple>${body}</simple>
+			</setHeader>
+
+			<to uri="direct:consultaMail" />
+		</route>
+
+		<!-- Ruta que consulta el Servicio Transversal Parámetro para obtener los 
+			datos del mail de autenticación -->
+		<route id="opConsultarMAIL">
+			<from uri="direct:consultaMail" />
+
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setBody>
+				<simple>${in.header.MAIL}</simple>
+			</setBody>
+
+			<inOut uri="cxfrs:bean:WSparametroConsulta" />
+
+			<convertBodyTo type="String" />
+			<setHeader headerName="infoMAIL">
+				<simple>${body}</simple>
+			</setHeader>
+
+			<to uri="direct:consultaPass" />
+		</route>
+
+		<!-- Ruta que consulta el Servicio Transversal Parámetro para obtener los 
+			datos del password de autenticación -->
+		<route id="opConsultarPASS">
+			<from uri="direct:consultaPass" />
+
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setBody>
+				<simple>${in.header.PASS}</simple>
+			</setBody>
+
+			<inOut uri="cxfrs:bean:WSparametroConsulta" />
+
+			<convertBodyTo type="String" />
+			<setHeader headerName="infoPASS">
+				<simple>${body}</simple>
+			</setHeader>
+
+			<to uri="direct:envioMail" />
+		</route>
+
+		<!-- Ruta que envía el e-mail -->
+		<route id="opEnviarMAIL">
+			<from uri="direct:envioMail" />
+
+			<process ref="PrcMailEnviar" />
+			<wireTap uri="direct:EjecutarEVT" />
+			<log message="${body}" />
+
+			<to uri="mock:result" />
+		</route>
+
+		<!-- Ruta que crea un evento en la DB de MySQL -->
+		<route>
+			<from uri="direct:EjecutarEVT" />
+
+			<choice>
+				<when>
+					<simple>${header.EVT_Query} != null</simple>
+					<setBody>
+						<simple>${header.EVT_Query}</simple>
+					</setBody>
+					<to uri="activemq:queue:QEventoCrear" />
+				</when>
+			</choice>
+		</route>
+
+	</camelContext>
+
+</blueprint>

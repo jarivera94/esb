@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+
+	<cxf:rsServer id="WStransaccion" address="${HOST_TRANSACCION}"
+		serviceClass="com.koghi.nodo.transversales.ws.srvIntTransvTransaccion.WSTransaccion"
+		loggingFeatureEnabled="true" />
+
+	<bean id="PrcTransaccionCrear" class="com.koghi.nodo.transversales.procesadores.srvIntTransvTransaccion.PrcCrear" />
+	<bean id="PrcTransaccionActualizar" class="com.koghi.nodo.transversales.procesadores.srvIntTransvTransaccion.PrcActualizar" />
+
+	<camelContext id="ctxTransaccion"
+		xmlns="http://camel.apache.org/schema/blueprint">
+
+		<route id="opSeleccionar">
+			<from uri="cxfrs://bean://WStransaccion" />
+			<log message="Servicio Web SrvIntTransvTransaccion" />
+			<choice>
+				<when>
+					<simple>${in.header.operationName} == "crear"</simple>
+					<to uri="direct:CrearTX"/>
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "actualizar"</simple>
+					<to uri="direct:ActualizarTX"/>					
+				</when>
+			</choice>			
+		</route>
+		
+		<route id="opCrear">
+			<from uri="direct:CrearTX" />
+			<doTry>
+				<process ref="PrcTransaccionCrear" />
+				<choice>
+					<when>
+						<simple>${body} == "true"</simple>
+						<setBody>
+							<simple>[1] : Transacción con [ID] : [${header.TX_Id}] creada correctamente . . .</simple>
+						</setBody>
+					</when>
+				</choice>
+				<doCatch>
+					<exception>java.sql.SQLIntegrityConstraintViolationException
+					</exception>
+					<setBody>
+						<simple>[0] : Error en conexión con la base de datos . . . </simple>
+					</setBody>
+				</doCatch>
+			</doTry>
+			<to uri="direct:CrearEVT" />
+		</route>
+		
+		<route id="opActualizar">
+			<from uri="direct:ActualizarTX" />
+			<doTry>
+				<process ref="PrcTransaccionActualizar" />
+				<choice>
+					<when>
+						<simple>${body} == "true"</simple>
+						<setBody>
+							<simple>[1] : Transacción con [ID] : [${header.TX_Id}] actualizada correctamente . . .</simple>
+						</setBody>
+					</when>
+				</choice>
+				<doCatch>
+					<exception>java.sql.SQLIntegrityConstraintViolationException
+					</exception>
+					<setBody>
+						<simple>[0] : Error en conexión con la base de datos . . . </simple>
+					</setBody>
+				</doCatch>
+			</doTry>
+			<to uri="direct:CrearEVT" />
+		</route>
+		
+		<route id="opReportar">
+			<from uri="direct:CrearEVT" />
+			<log message="${body}" />
+			<wireTap uri="direct:EjecutarEVT" />			
+			<to uri="mock:result" />
+		</route>
+		
+		<route>
+			<from uri="direct:EjecutarEVT" />
+			<choice>
+				<when>
+					<simple>${header.EVT_Query} != null</simple>
+					<setBody>
+						<simple>${header.EVT_Query}</simple>
+					</setBody>
+					<to uri="activemq:queue:QEventoCrear" />
+				</when>
+			</choice>
+		</route>
+
+	</camelContext>
+
+</blueprint>

@@ -1,0 +1,11 @@
+# ldapmodify -x -W -D "cn=ramesh,dc=tgs,dc=com" -f file1.ldif
+
+dn: cn=rol1,ou=roles,ou=urt,dc=koghi,dc=com
+changetype: modify
+add: memberuid
+memberuid: cflorez
+
+dn: cn=rol2,ou=roles,ou=urt,dc=koghi,dc=com
+changetype: modify
+add: memeberuid
+memberuid: cflorez

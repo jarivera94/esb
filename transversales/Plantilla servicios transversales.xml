@@ -1,0 +1,128 @@
+<!-- 		<onException> -->
+<!-- 			<exception>java.lang.Exception</exception> -->
+<!-- 			<redeliveryPolicy maximumRedeliveries="5" -->
+<!-- 				redeliveryDelay="1000" /> -->
+<!-- 			<to uri="direct:exception" /> -->
+<!-- 		</onException> -->
+
+			<!-- Crea una transacción -->
+			<setHeader headerName="operacionTransversal">
+				<simple>crearTransaccion</simple>
+			</setHeader>
+			<wireTap uri="direct:servicioTransversalCrear" />
+			<delay>
+				<constant>2000</constant>
+			</delay>
+
+
+			<!-- EN ESTA SECCIÓN SE DEBE INCLUIR LA LÓGICA DE CONSUMO DEL SERVICIO -->
+
+			<!-- *************************************** -->
+
+			<!-- Crea el mensaje -->
+			<!-- ESTA SECCIÓN NO SE INCLUYE YA QUE POR EL MOMENTO
+			 NO SE NECESITAN LOS MENSAJES -->
+			<!-- <setHeader headerName="operacionTransversal">
+				<simple>crearMensaje</simple>
+			</setHeader>
+			<wireTap uri="direct:crearMensaje" />
+			<delay>
+				<constant>1000</constant>
+			</delay> -->
+			<!-- *************************************** -->
+
+			<!-- Actualiza la transacción -->
+			<setHeader headerName="operacionTransversal">
+				<simple>actualizarTransaccion</simple>
+			</setHeader>
+			<setHeader headerName="CodEstado">
+				<simple>1</simple>
+			</setHeader>
+			<setHeader headerName="ValReintentos">
+				<simple>0</simple>
+			</setHeader>
+			<wireTap uri="direct:servicioTransversalActualizar" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+			<!-- *************************************** -->
+
+		<route>
+			<from uri="direct:servicioTransversalCrear" />
+			<process ref="processorTransversalDatos" />
+			<log message="Creando Transacción" />
+			<process ref="processorServicioTransversal" />
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<to uri="cxfrs://bean://servicioTransversalCrearTransacion" />
+			<log message="Se creó la transacción" />
+		</route>
+
+		<route>
+			<from uri="direct:servicioTransversalActualizar" />
+			<process ref="processorTransversalDatos" />
+			<log message="Actualizando Transacción" />
+			<process ref="processorServicioTransversal" />
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<to uri="cxfrs://bean://servicioTransversalActualizarTransacion" />
+			<log message="Se actualizó la transacción" />
+		</route>
+
+		<route>
+			<from uri="direct:crearMensaje" />
+			<process ref="processorTransversalDatos" />
+			<log message="Creando mensaje" />
+			<process ref="processorServicioTransversal" />
+			<to uri="activemq:queue:QMensajeCrear" />
+			<log message="Se creó el mensaje" />
+		</route>
+
+		<route>
+			<from uri="direct:crearError" />
+			<process ref="processorTransversalDatos" />
+			<log message="Creando error" />
+			<process ref="processorServicioTransversal" />
+			<to uri="activemq:queue:QErrorCrear" />
+			<log message="Se creó el error" />
+			<setHeader headerName="operacionTransversal">
+				<simple>actualizarTransaccion</simple>
+			</setHeader>
+			<setHeader headerName="CodEstado">
+				<simple>-2</simple>
+			</setHeader>
+			<setHeader headerName="ValReintentos">
+				<simple>5</simple>
+			</setHeader>
+			<wireTap uri="direct:servicioTransversalActualizar" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+		</route>
+
+		<route>
+			<from uri="direct:exception" />
+			<log message="se Generó un error" />
+			<process ref="processorError" />
+			<setHeader headerName="operacionTransversal">
+				<simple>crearError</simple>
+			</setHeader>
+			<wireTap uri="direct:crearError" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+		</route>

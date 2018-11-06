@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xsi:schemaLocation="
+         http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+         http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+         http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd">
+
+	<bean id="PrcErrorCrear" class="com.koghi.nodo.transversales.procesadores.srvIntTransvError.PrcCrear" />
+
+	<camelContext id="ctxError"
+		xmlns="http://camel.apache.org/schema/blueprint">
+
+		<route id="opCrear">
+			<from uri="activemq:queue:QErrorCrear" />
+			<log message="Servicio Web SrvIntTransvError" />			
+			<doTry>
+				<process ref="PrcErrorCrear" />
+				<choice>
+					<when>
+						<simple>${body} == "true"</simple>
+						<setBody>
+							<simple>[1] : Error con [ID_TRANSACCION] : [${header.EVT_IdTransaccion}] creado correctamente . . .</simple>
+						</setBody>
+					</when>
+				</choice>
+				<doCatch>
+						<exception>java.sql.SQLIntegrityConstraintViolationException</exception>
+					<setBody>
+						<simple>[0] : Error en conexión con la base de datos . . .</simple>
+					</setBody>
+				</doCatch>
+			</doTry>			
+			<log message="${body}" />
+			<to uri="mock:result" />
+		</route>
+
+	</camelContext>
+
+</blueprint>

@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xmlns:cxf="http://camel.apache.org/schema/blueprint/cxf"
+	xmlns:http-conf="http://cxf.apache.org/transports/http/configuration"
+	xsi:schemaLocation="
+				http://www.osgi.org/xmlns/blueprint/v1.0.0 https://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+				http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd
+				http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+				http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd">
+
+<!-- 		loggingFeatureEnabled="true" -->
+	<cxf:rsServer id="servicioConsulta"
+		address="${HOST_SERVICIO}"
+		serviceClass="com.koghi.nodo.csj.ws.srvIntConsultaProcesos.WSConsultaProcesos"
+		/>
+
+<!-- 	<cxf:rsServer id="servicioPrueba" -->
+<!-- 		address="http://172.16.55.200:8590/csj/consultaProcesos" -->
+<!-- 		serviceClass="com.koghi.nodo.csj.ws.srvIntConsultaProcesos.WSConsultaProcesos" -->
+<!-- 		loggingFeatureEnabled="true" -->
+<!-- 		/> -->
+
+<!-- 		address="http://181.57.206.62/WS_Tierras/oauth/token" -->
+	<cxf:rsClient id="servicioObtenerTokenCSJ"
+		address="${HOST_OBTENER_TOKEN}"
+		serviceClass="com.koghi.nodo.csj.ws.srvIntConsultaProcesos.WSConsultaProcesos">
+	</cxf:rsClient>
+	
+<!-- 			address="http://181.57.206.62/WS_Tierras/api/ConsultaProcesos" -->
+	<cxf:rsClient id="consultaProcesos"
+		address="${HOST_CONSULTA_PROCESOS}"
+		serviceClass="com.koghi.nodo.csj.ws.srvIntConsultaProcesos.WSConsultaProcesos">
+	</cxf:rsClient>
+	
+	
+<!-- 			address="http://181.57.206.62/WS_Tierras/api/ConsultaProcesos" -->
+	<cxf:rsClient id="consulta"
+		address="${HOST_CONSULTA}"
+		serviceClass="com.koghi.nodo.csj.ws.srvIntConsultaProcesos.WSConsultaProcesos">
+	</cxf:rsClient>
+	
+<!-- 			address="http://181.57.206.62/WS_Tierras/api/Sentencias" -->
+	<cxf:rsClient id="sentenciasPorRadicacion"
+		address="${HOST_SENTENCIAS_POR_RADICACION}"
+		serviceClass="com.koghi.nodo.csj.ws.srvIntConsultaProcesos.WSConsultaProcesos">
+	</cxf:rsClient>	
+	
+<!-- 			address="http://181.57.206.62/WS_Tierras/api/Sentencias" -->
+	<cxf:rsClient id="sentenciasDespacho"
+		address="${HOST_SENTENCIAS_DESPACHO}"
+		serviceClass="com.koghi.nodo.csj.ws.srvIntConsultaProcesos.WSConsultaProcesos">
+	</cxf:rsClient>	
+	
+<!-- 			address="http://181.57.206.62/WS_Tierras/api/Sentencias" -->
+	<cxf:rsClient id="sentenciasPDF"
+		address="${HOST_SENTENCIAS_PDF}"
+		serviceClass="com.koghi.nodo.csj.ws.srvIntConsultaProcesos.WSConsultaProcesos">
+	</cxf:rsClient>	
+	
+
+	<bean id="prcImprimirHeaders"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcImprimirHeaders" />
+	<bean id="prcMostrarRespuesta"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcMostrarRespuesta" />
+	<bean id="prcGestionarServicio"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcManageCSJService" />
+	<bean id="prcSetValReintentos"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcSetValReintentos" />
+	<bean id="prcRedeliveryCounter"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcRedeliveryCounter" />
+	<bean id="prcConsultaParametro"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcConsultaParametro" />
+	<bean id="prcRespuestaParametro"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcProcesarRespuestaParametro" />
+	<bean id="prcConsultaServicio"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcConsultaServicio" />
+	<bean id="prcRespuestaServicio"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcProcesarRespuestaServicio" />
+	<bean id="prcSetErrorInfoUsuario"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcSetErrorInfoUsuario" />
+	<bean id="prcImprimirBody"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcImprimirBody" />
+		
+	<!-- BEAN PARA CONFIGURACIÓN DE LOS HEADERS DE AUDITORIA -->
+	<!-- ******************************************************************************** -->
+	<bean id="prcConfigurarHeadersTx"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcConfigurarHeadersTx" />
+	<!-- ******************************************************************************** -->
+	
+	<!-- BEANS PARA LA INTEGRACION CON SERVICIO DE SESION (AUTENTICAR Y AUTORIZAR)        -->
+	<!-- ******************************************************************************** -->
+	
+	<bean id="prcConsultaOperacion"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcConsultaOperacion" />
+	<bean id="prcRespuestaOperacion"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcProcesarRespuestaOperacion" />
+	<bean id="prcServicioAutenticar"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcServicioAutenticar" />
+	<bean id="prcRespuestaAutenticar"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcProcesarRespuestaAutenticar" />
+	<bean id="prcRespuestaAutorizar"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcProcesarRespuestaAutorizar" />
+	
+	<!-- PROCESSOR PARA VERIFICAR EL CAMBIO DE AUTHENTICATION -->
+	<bean id="prcVerificarAuthorization"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcVerificarCambioAuthorization" />
+	<!-- ******************************************************************************** -->
+	<!-- FIN DE BEANS PARA LA INTEGRACION CON SERVICIO DE SESION (AUTENTICAR Y AUTORIZAR) -->
+	
+	<!-- ****************BEAN PARA EL SETEO DEL ID DEL EXCHANGE EN UN HEADER -->
+	<bean id="prcSeteoIdExchange"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcSeteoIdExchange" />
+	<!-- ****************************************************************** -->
+
+	<bean id="prcSetCodEstado"
+		class="com.koghi.nodo.csj.srvIntConsultaProcesos.procesadores.PrcSetCodEstado" />
+
+
+  <camelContext 
+		xmlns="http://camel.apache.org/schema/blueprint">
+   
+   		<onException onRedeliveryRef="prcRedeliveryCounter" >
+			<exception>java.lang.Exception</exception>
+			<redeliveryPolicy maximumRedeliveries="{{MAX_RETRIES}}"
+				redeliveryDelay="{{RETRY_DELAY}}" />
+			<handled><constant>true</constant></handled>
+			<to uri="direct:exceptionAfterRedelivery" />
+		</onException>
+		
+   <route id="route0">
+			<from uri="cxfrs://bean://servicioConsulta" />
+			<log message="Máximo número de intentos para el servicio: {{MAX_RETRIES}}" />
+			<log message="Tiempo entre intentos: {{RETRY_DELAY}} ms" />
+			
+			<setHeader headerName="usuarioToken"><simple>{{USUARIO}}</simple></setHeader>
+			<setHeader headerName="passwordToken"><simple>{{PASSWORD}}</simple></setHeader>
+			<setHeader headerName="grantType"><simple>{{GRANT_TYPE}}</simple></setHeader>
+			
+			<process ref="prcGestionarServicio" />
+			
+			<log message="Content-Type luego del Processor: ${headers.Content-Type}" />
+			<process ref="prcSeteoIdExchange" />
+			<process ref="prcConfigurarHeadersTx" />
+			<setHeader headerName="IdServicio">
+				<simple>{{ID_SERVICIO}}</simple>
+			</setHeader>
+			
+			<choice>
+				<when>
+					<simple>${in.header.operationName} == "consultaProcesos"</simple>
+					<setHeader headerName="IdOperacion">
+						<simple>{{ID_OPERACION_CONSULTA_PROCESOS}}</simple>
+					</setHeader>
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "consulta"</simple>
+					<setHeader headerName="IdOperacion">
+						<simple>{{ID_OPERACION_CONSULTA}}</simple>
+					</setHeader>
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "sentenciasPorRadicacion"</simple>
+					<setHeader headerName="IdOperacion">
+						<simple>{{ID_OPERACION_SENTENCIAS_POR_RADICACION}}</simple>
+					</setHeader>
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "sentenciasDespacho"</simple>
+					<setHeader headerName="IdOperacion">
+						<simple>{{ID_OPERACION_SENTENCIAS_DESPACHO}}</simple>
+					</setHeader>
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "sentenciasPDF"</simple>
+					<setHeader headerName="IdOperacion">
+						<simple>{{ID_OPERACION_SENTENCIAS_PDF}}</simple>
+					</setHeader>
+				</when>
+			</choice>
+			
+			<setHeader headerName="EntidadReceptora">
+				<simple>{{ENTIDAD_RECEPTORA}}</simple>
+			</setHeader>
+			<setHeader headerName="ValReintentos">
+				<simple>0</simple>
+ 			</setHeader>
+			<setHeader headerName="TelefonoMesaDeAyuda">
+				<simple>{{TELEFONO_MESA_DE_AYUDA}}</simple>
+			</setHeader>
+			<setHeader headerName="NombreContactoMesaDeAyuda">
+				<simple>{{NOMBRE_CONTACTO_MESA_DE_AYUDA}}</simple>
+			</setHeader>
+			<setHeader headerName="VersionServicio">
+				<simple>{{VERSION_SERVICIO}}</simple>
+			</setHeader>
+					
+			<!-- *************************************** -->
+
+			<!-- INTEGRACION CON SERVICIO DE AUTENTICACION -->
+			<!-- Backup del body recibido en la petición -->
+<!-- 			<setHeader headerName="bodyBackup"> -->
+<!-- 				<simple>${body}</simple> -->
+<!-- 			</setHeader> -->
+			
+			<!-- VERIFICAR SI SE REQUIERE AUTENTICACION -->
+			<process ref="prcConsultaOperacion" />
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<log message="**********JUSTO ANTES DE CONSULTAR EL SERVICIO TRASNVERSAL OPERACION, CON EL BODY ${body}" />
+			<to uri="cxfrs://bean://servicioTransversalConsultarOperacion" />
+			<process ref="prcRespuestaOperacion" />
+			<choice>
+				<when>
+					<simple>${in.header.existeAutenticacion} == 0</simple>
+					<!-- BLOQUE QUE CAMBIA EL HEADER Authorization POR EL VALOR DEL ARCHIVO DE PROPIEDADES, SI EL VALOR NO ES NULL -->
+					<setHeader headerName="authorizationOperacionConsultar">
+						<simple>{{AUTHORIZATION_OPERACION_CONSULTAR}}</simple>
+					</setHeader>
+					<process ref="prcVerificarAuthorization" />
+					<!-- ************************************ -->
+					<to uri="direct:operaciones" />							
+				</when>
+				<when>
+					<simple>${in.header.existeAutenticacion} == 1</simple>
+					<log message="*************LA OPERACION REQUIERE AUTENTICACION" />
+					<!-- REALIZAR PROCESO DE AUTENTICAR Y AUTORIZAR -->
+					<process ref="prcServicioAutenticar" />
+					<to uri="cxfrs://bean://servicioSesionAutenticar" />
+					<process ref="prcRespuestaAutenticar" />
+					<choice>
+						<when>
+							<simple>${in.header.estaAutenticado} == true</simple>
+							<log message="****************SE ESTA AUTENTICADO, PASAR A PROCESO DE AUTORIZACION" />
+							<to uri="cxfrs://bean://servicioSesionAutorizar" />
+							<process ref="prcRespuestaAutorizar" />
+							<choice>
+								<when>
+									<simple>${in.header.estaAutorizado} == true</simple>
+									<log message="**********SE ESTA AUTORIZADO" />
+									<!-- BLOQUE QUE CAMBIA EL HEADER Authorization POR EL VALOR DEL ARCHIVO DE PROPIEDADES, SI EL VALOR NO ES NULL -->
+									<setHeader headerName="authorizationOperacionConsultar">
+										<simple>{{AUTHORIZATION_OPERACION_CONSULTAR}}</simple>
+									</setHeader>
+									<process ref="prcVerificarAuthorization" />
+									<!-- ************************************ -->
+									<to uri="direct:operaciones" />
+								</when>
+								<when>
+									<simple>${in.header.estaAutorizado} == false</simple>
+									<log message="***********NO SE ESTA AUTORIZADO, FIN" />
+									<to uri="mock:result" />
+								</when>
+							</choice>
+						</when>
+						<when>
+							<simple>${in.header.estaAutenticado} == false</simple>
+							<log message="***************NO SE ESTA AUTENTICADO, FIN" />
+							<to uri="mock:result" />
+						</when>
+					</choice>
+					
+				</when>
+			</choice>
+			
+			
+			<!-- *************************************** -->
+			
+			
+	</route>
+			
+	<route>
+		
+		<from uri="direct:operaciones" />	
+		
+			<setHeader headerName="Operacion"><simple>Guardar-Body</simple></setHeader>
+			<convertBodyTo type="String" />
+			<process ref="prcGestionarServicio" />			
+			<!-- Crea una transacción -->
+			<setHeader headerName="operacionTransversal">
+				<simple>crearTransaccion</simple>
+			</setHeader>
+			<wireTap uri="direct:servicioTransversalCrear" />
+			<delay>
+				<constant>2000</constant>
+			</delay>
+			
+			<!-- *************************************** -->
+	
+			<setHeader headerName="Operacion"><simple>Obtener-Token</simple></setHeader>
+				
+			<convertBodyTo type="String" />
+			
+			<log message="----------------------------------------------------" />
+			<log message="---- OPERATION NAME: ${in.header.operationName} ----" />
+			<log message="----------------------------------------------------" />
+			<log message="-------------------------------------------------------------" />
+			<log message="---- Body antes de PrcGestionarServicio [TOKEN]: ${body} ----" />
+			<log message="-------------------------------------------------------------" />
+			
+			<process ref="prcGestionarServicio" />
+			
+			<log message="---------------------------------------------------------------" />
+			<log message="---- Body después de PrcGestionarServicio [TOKEN]: ${body} ----" />
+			<log message="---------------------------------------------------------------" />
+			<log message="----------------------------------------------------" />
+			<log message="---- OPERATION NAME: ${in.header.operationName} ----" />
+			<log message="----------------------------------------------------" />
+			
+			<to uri = "cxfrs://bean://servicioObtenerTokenCSJ" />
+			<convertBodyTo type="String" />
+			
+			<log message="------------------------------------------------" />
+			<log message="---- Body después de obtener TOKEN: ${body} ----" />
+			<log message="------------------------------------------------" />
+			<log message="----------------------------------------------------" />
+			<log message="---- OPERATION NAME: ${in.header.operationName} ----" />
+			<log message="----------------------------------------------------" />
+			
+			<setHeader headerName="Operacion"><simple>Almacenar-Token</simple></setHeader>
+			<convertBodyTo type="String" />
+			
+			<log message="------------------------------" />
+			<log message="---- Pasó Almacenar Token ----" />
+			<log message="------------------------------" />
+			<log message="----------------------------------------------------" />
+			<log message="---- OPERATION NAME: ${in.header.operationName} ----" />
+			<log message="----------------------------------------------------" />
+			
+			<process ref="prcGestionarServicio" />
+			
+			<log message="---------------------------------------------------------------" />
+			<log message="---- Después de PrcGestionarServicio [PreConsumir] ----" />
+			<log message="---------------------------------------------------------------" />
+			<log message="----------------------------------------------------" />
+			<log message="---- OPERATION NAME: ${in.header.operationName} ----" />
+			<log message="----------------------------------------------------" />
+			
+			<setHeader headerName="Operacion"><simple>Consumir-Servicio</simple></setHeader>
+
+			<log message="---------------------------------------------------------------" />
+			<log message="---- Antes de PrcGestionarServicio [Consumir] ----" />
+			<log message="---------------------------------------------------------------" />
+			
+			<log message="---------------------------------------------------------------" />
+			<log message="---- OPERACION A EJECUTAR: ${in.header.Operacion} ----" />
+			<log message="---------------------------------------------------------------" />
+			
+			<process ref="prcGestionarServicio" />
+
+			<log message="---------------------------------------------------------------" />
+			<log message="---- Despuśe de PrcGestionarServicio [Consumir] ----" />
+			<log message="---------------------------------------------------------------" />
+			
+			<setHeader headerName="CamelHttpMethod">
+				<simple>GET</simple>
+			</setHeader>
+			
+			<log message="-------------------------------------------" />
+			<log message="-----------------CAMELHTTPMETHOD:-----------------${in.header.CamelHttpMethod}" />
+			<log message="-------------------------------------------" />
+			<log message="-----------------BODY:-----------------${body}" />
+			<log message="-------------------------------------------" />
+			<log message="---- JUSTO ANTES DEL CHOICE DE CONSUMO ----" />
+			<log message="-------------------------------------------" />
+			
+			<log message="----------------------------------------------------" />
+			<log message="---- OPERATION NAME: ${in.header.operationName} ----" />
+			<log message="----------------------------------------------------" />
+					
+			<choice>
+				<when>
+					<simple>${in.header.operationName} == "consultaProcesos"</simple>
+					<log message="------------------------------------------------------" />
+					<log message="---- JUSTO ANTES DE SALTAR AL CONSUMO SOLICITUDES ----" />
+					<log message="------------------------------------------------------" />
+					<to uri = "cxfrs://bean://consultaProcesos?throwExceptionOnFailure=true" />
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "consulta"</simple>
+					<log message="JUSTO ANTES DE CPNSUMIR EL SERVOCOP DE CONSULTA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" />
+					<log message="------------------------------------------------------" />
+					<log message="---- HTTP QUERY: ${in.header.CamelHttpQuery} ----" />
+					<log message="------------------------------------------------------" />
+					<log message="-----------------BODY:-----------------${body}" />
+					<log message="-------------------------------------------" />
+					<log message="-----------------CAMELHTTPMETHOD:-----------------${in.header.CamelHttpMethod}" />
+					<process ref="prcImprimirHeaders" />
+					<log message="-----------------DESPUES DE PRCIMPRIMIR HEADERS Y ANTES DEL CONSUMO DE LA OPERACION-------------------" />
+					<log message="-------HTTP: {{HOST_CONSULTA}}?${in.header.CamelHttpQuery} ----------------------------" />
+					<to uri = "cxfrs://bean://consulta?throwExceptionOnFailure=true" />
+					<log message="-----------------DESPUES DEL CONSUMO DE LA OPERACION Y ANTES DE PRCMOSTRAR RESPUESTA--------------------" />
+					<process ref="prcMostrarRespuesta" />
+					<log message="-----------------DESPUES DE PRCMOSTRARRESPUESTA--------------------------" />
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "sentenciasPorRadicacion"</simple>
+					<log message="------------------------------------------------------" />
+					<log message="---- JUSTO ANTES DEL CONSUMO POR SENTENCIAS_POR_RADICACION ----" />
+					<log message="------------------------------------------------------" />
+					<to uri = "cxfrs://bean://sentenciasPorRadicacion?throwExceptionOnFailure=true" />
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "sentenciasDespacho"</simple>
+					<to uri = "cxfrs://bean://sentenciasDespacho?throwExceptionOnFailure=true" />
+				</when>
+				<when>
+					<simple>${in.header.operationName} == "sentenciasPDF"</simple>
+					<log message="JUSTO ANTES DE CPNSUMIR EL SERVICIO SENTENCIASPDF %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" />
+					<log message="------------------------------------------------------" />
+					<log message="---- HTTP QUERY: ${in.header.CamelHttpQuery} ----" />
+					<log message="------------------------------------------------------" />
+					<log message="-----------------BODY:-----------------${body}" />
+					<log message="-------------------------------------------" />
+					<log message="----- AUTHORIZATION: ${in.header.Authorization}----------" />
+					<log message="-----------------CAMELHTTPMETHOD:-----------------${in.header.CamelHttpMethod}" />
+					<to uri = "cxfrs://bean://sentenciasPDF?throwExceptionOnFailure=true" />
+					<process ref="prcMostrarRespuesta" />
+				</when>
+			</choice>
+
+			<convertBodyTo type="String" />
+
+			
+			<to uri="mock:result" />
+
+			<!-- *************************************** -->
+			
+			<!-- Actualiza la transacción -->
+			<setHeader headerName="operacionTransversal">
+				<simple>actualizarTransaccion</simple>
+			</setHeader>
+			<setHeader headerName="CodEstado">
+				<simple>1</simple>
+			</setHeader>
+<!-- 			<setHeader headerName="ValReintentos"> -->
+<!-- 				<simple>0</simple> -->
+<!-- 			</setHeader> -->
+			<wireTap uri="direct:servicioTransversalActualizar" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+			
+			<!-- *************************************** -->
+			
+			<setHeader headerName="operacionTransversal">
+				<simple>limpiarCacheTransaccion</simple>
+			</setHeader>
+			<process ref="processorServicioTransversal" />
+			
+		</route>
+		
+		<route>
+			<from uri="direct:servicioTransversalCrear" />
+			<process ref="processorTransversalDatos" />
+			<log message="Creando Transacción" />
+			<process ref="processorServicioTransversal" />
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<to uri="cxfrs://bean://servicioTransversalCrearTransacion" />
+			<log message="Se creó la transacción" />
+		</route>
+
+		<route>
+			<from uri="direct:servicioTransversalActualizar" />
+			<process ref="processorTransversalDatos" />
+			<log message="Actualizando Transacción" />
+			<process ref="processorServicioTransversal" />
+			<setHeader headerName="Content-Type">
+				<simple>application/json</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			<setHeader headerName="CamelHttpPath">
+				<simple></simple>
+			</setHeader>
+			<log message="Actualizando Transacción" />
+			<to uri="cxfrs://bean://servicioTransversalActualizarTransacion" />
+			<log message="Se actualizó la transacción" />
+		</route>
+	
+		<route>
+			<from uri="direct:crearError" />
+			<process ref="processorTransversalDatos" />
+			<log message="Creando error" />
+			<process ref="processorServicioTransversal" />
+			<to uri="activemq:queue:QErrorCrear" />
+			<log message="Se creó el error" />
+			<setHeader headerName="operacionTransversal">
+				<simple>actualizarTransaccion</simple>
+			</setHeader>
+			<process ref="prcSetValReintentos" />
+			<wireTap uri="direct:servicioTransversalActualizar" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+					
+		</route>
+		
+		
+		<route id="exceptionRoute" >
+			<from uri="direct:endPointException" />
+			
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			
+			<onException>
+				<exception>java.lang.Exception</exception>
+				<continued><constant>true</constant></continued>
+				<log message = "Error en la ruta de manejo de reintentos. ${body}"/>
+			</onException>
+			
+			<log message="Se generó un error" />
+			<process ref="processorError"/>
+			<setHeader headerName="operacionTransversal">
+				<simple>crearError</simple>
+			</setHeader>
+			<wireTap uri="direct:crearError" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+			<setHeader headerName="CamelHttpMethod">
+				<simple>GET</simple>
+			</setHeader>
+								<log message="-----------------CAMELHTTPMETHOD (L533):-----------------${in.header.CamelHttpMethod}" />
+								<log message="-----------------CAMELHTTPQUERY (L534):-----------------${in.header.CamelHttpQuery}" />
+			
+		</route>
+
+		<route id="exceptionRouteAfterRedeliveryID">
+				
+			<from uri="direct:exceptionAfterRedelivery" />
+			<setHeader headerName="CamelHttpMethod">
+				<simple>POST</simple>
+			</setHeader>
+			
+			<onException>
+				<exception>java.lang.Exception</exception>
+				<continued><constant>true</constant></continued>
+				<log message = "Error en la ruta de manejo final. ${body}"/>
+			</onException>
+			
+			<!-- RUTA QUE ACTUALIZARA TRANSACCION, Y ENVIARA CORREOS A LA COLA DE CORREOS -->
+			
+			<!-- *************************************** -->
+			
+			<log message="*************ENTRA A RUTA exceptionRouteAfterRedelivery" />
+<!-- 			<process ref="prcSetCodEstado" /> -->
+			<!-- Actualiza la transacción -->
+			<setHeader headerName="operacionTransversal">
+				<simple>actualizarTransaccion</simple>
+			</setHeader>
+<!-- 			<setHeader headerName="CodEstado"> -->
+<!-- 				<simple>-1</simple> -->
+<!-- 			</setHeader> -->
+<!-- 			<setHeader headerName="ValReintentos"> -->
+<!-- 				<simple>{{MAX_RETRIES}}</simple> -->
+<!-- 			</setHeader> -->
+			<wireTap uri="direct:servicioTransversalActualizar" />
+			<delay>
+				<constant>1000</constant>
+			</delay>
+			
+			<!-- *************************************** -->
+			
+			<!-- ENVIO CORREO A MESA DE SERVICIO -->
+			<!-- *************************************** -->
+			<log message="*****ENTRA AL BLOQUE DE CORREO MESA DE AYUDA. JUSTO ANTES DE PROCESAR EL prcConsultaParametro*****" />
+			<process ref="prcConsultaParametro" />
+			<log message="*****JUSTO ANTES DE CONSUMIR EL SERVICIO TRASNVERSAL servicioTransversalConsultarParametro*****" />
+			<log message="\n\n-----------------CAMELHTTPMETHOD (L579):-----------------${in.header.CamelHttpMethod} ------- \n\n" />
+			
+<!-- 			<setHeader headerName="CamelHttpPath"> -->
+<!-- 				<simple></simple> -->
+<!-- 			</setHeader> -->
+<!-- 			<setHeader headerName="CamelHttpQuery"> -->
+<!-- 				<simple></simple> -->
+<!-- 			</setHeader>			 -->
+			<to uri="cxfrs://bean://servicioTransversalConsultarParametro" />
+			<log message="*****JUSTO DESPUES DE CONSULTAR EL SERVICIO TRASNVERSAL servicioTransversalConsultarParametro*****" />
+			<log message="*****JUSTO ANTES DEL PROCESSOR prcRespuestaParametro*****" />
+			<process ref="prcRespuestaParametro" />
+			<log message="*****JUSTO DESPUES DEL PROCESSOR prcRespuestaParametro, JUSTO ANTES DE ENVIAR A PILA DE CORREO QCorreoElectronicoEnviar*****" />
+			
+			<!-- *************************************** -->
+			
+			<!-- ENVIO CORREO A RESPONSABLE DE SERVICIO -->
+			<!-- *************************************** -->
+			<log message="*****ENTRA AL BLOQUE DE CORREO RESPONSABLE DE SERVICIO. JUSTO ANTES DE PROCESAR EL prcConsultaServicio*****" />
+			<process ref="prcConsultaServicio" />
+			<log message="*****JUSTO DESPUES DEL PROCESSOR prcConsultaServicio, JUSTO ANTES DE CONSUMIR EL SERVICIO TRANSVERSALE servicioTransversalConsultarServicio*****" />
+<!-- 			<setHeader headerName="CamelHttpPath"> -->
+<!-- 				<simple></simple> -->
+<!-- 			</setHeader> -->
+<!-- 			<setHeader headerName="CamelHttpQuery"> -->
+<!-- 				<simple></simple> -->
+<!-- 			</setHeader> -->
+			<to uri="cxfrs://bean://servicioTransversalConsultarServicio" />
+			<log message="*****JUSTO DESPUES DE CONSUMIR EL SERVICIO servicioTransversalConsultarServicio*****" />
+
+			<log message="*****JUSTO ANTES DEL PROCESSOR prcRespuestaServicio*****" />
+			<process ref="prcRespuestaServicio" />
+			<log message="*****JUSTO DESPUES DEL PROCESSOR prcRespuestaServicio, JUSTO ANTES DE ENVIAR A LA COLA DE CORREO QCorreoElectronicoEnviar*****" />
+<!-- 			<process ref="prcImprimirBody" /> -->
+			<to uri="activemq:QCorreoElectronicoEnviar?disableReplyTo=false" />
+			<log message="*****JUSTO DESPES DE ENVIAR A LA COLA DE CORREO QCorreoElectronicoEnviar*****" />
+			
+			<!-- *************************************** -->
+			
+			<log message="***** ANTES DEL PROCESS FINAL *****" />
+			<process ref="prcSetErrorInfoUsuario" />
+			<log message="***** DESPUÉS DEL PROCESS FINAL *****" />
+			<setHeader headerName="operacionTransversal">
+				<simple>limpiarCacheTransaccion</simple>
+			</setHeader>
+			<process ref="processorServicioTransversal" />
+			<to uri="mock:result" />
+			
+			
+		</route>
+   
+  </camelContext>
+
+</blueprint>
